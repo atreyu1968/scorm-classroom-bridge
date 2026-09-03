@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ package.title }}</title><link rel="stylesheet" href="{{ url_for('static',filename='css/app.css') }}"></head>
+<body class="player-body">
+<div id="integrity-banner" class="integrity-banner" hidden></div>
+<header class="player-toolbar">
+  <div class="player-title">{{ package.title }}{% if mode=='exam' %} <span class="player-exam">EXAMEN</span>{% endif %}</div>
+  <div class="player-meta">Estado: <b id="live-status">{{ attempt.status }}</b> · Nota: <b id="live-score">{{ '—' if attempt.score is none else '%.1f%%'|format(attempt.score) }}</b> · Incidencias: <b id="focus-counter">{{ attempt.focus_losses }}</b></div>
+  {% if fullscreen %}<button id="btn-fullscreen" class="btn btn-secondary">Pantalla completa</button>{% endif %}
+  <button id="btn-save-exit" class="btn {{ 'btn-danger' if mode=='exam' else 'btn-secondary' }}">{{ 'Entregar y salir' if mode=='exam' else 'Guardar y salir' }}</button>
+</header>
+<iframe class="player-frame" title="Contenido SCORM" src="{{ url_for('scorm_content',package_id=package.id,filename=package.entrypoint) }}" allow="fullscreen; autoplay"></iframe>
+<script>window.SCORM_BRIDGE_CONFIG={{ {'stateUrl':url_for('save_state',attempt_id=attempt.id),'eventUrl':url_for('attempt_event',attempt_id=attempt.id),'initialState':attempt.state(),'fullscreen':fullscreen,'focusLimit':focus_limit,'mode':mode,'exitUrl':exit_url}|tojson }};</script>
+<script src="{{ url_for('static',filename='js/scorm-runtime.js') }}"></script><script src="{{ url_for('static',filename='js/player-shell.js') }}"></script>
+</body></html>

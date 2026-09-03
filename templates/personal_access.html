@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Acceso personal{% endblock %}
+{% block content %}
+<div class="card form-card narrow">
+  <span class="badge">Enlace personal</span>
+  <h1>{{ student.name }}</h1>
+  <p class="muted">{{ student.group_name or 'Alumno/a' }}</p>
+  <p>Este enlace está protegido con PIN.</p>
+  <form method="post">
+    <div class="field"><label>PIN</label><input type="password" inputmode="numeric" name="pin" autocomplete="off" required autofocus></div>
+    <button class="btn btn-primary" type="submit">Abrir mis actividades</button>
+  </form>
+</div>
+{% endblock %}

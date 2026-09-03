@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Cursos{% endblock %}
+{% block content %}
+<div class="section-title"><div><h1>Cursos e itinerarios</h1><p class="muted">Agrupa varios SCORM como lecciones consecutivas.</p></div></div>
+<div class="two-col">
+  <div class="card"><h2>Nuevo curso</h2><form method="post">
+    <div class="field"><label>Título</label><input name="title" required placeholder="Gestión de Recursos Humanos"></div>
+    <div class="field"><label>Descripción</label><textarea name="description" rows="4"></textarea></div>
+    <label><input type="checkbox" name="sequential" value="1" checked> Itinerario secuencial: bloquear lecciones posteriores</label>
+    <div style="margin-top:1rem"><button class="btn btn-primary">Crear curso</button></div>
+  </form></div>
+  <div class="card"><h2>Funcionamiento</h2><p>Cada curso puede contener tantos paquetes SCORM como necesites. En modo secuencial, el alumno debe completar o superar las lecciones anteriores antes de avanzar.</p></div>
+</div>
+<div class="section-title"><h2>Cursos existentes</h2></div>
+<div class="assignment-grid">
+{% for c in courses %}<article class="card assignment-card"><div class="card-top"><span class="badge {{ 'ok' if c.active else 'muted' }}">{{ 'Activo' if c.active else 'Inactivo' }}</span><span class="badge">{{ 'SECUENCIAL' if c.sequential else 'LIBRE' }}</span></div><h3>{{ c.title }}</h3><p>{{ c.description or 'Sin descripción.' }}</p><p class="muted">{{ c.items|length }} lecciones · {{ c.enrollments|selectattr('active')|list|length }} matrículas</p><a class="btn btn-primary" href="{{ url_for('admin_course_detail',course_id=c.id) }}">Gestionar</a></article>{% else %}<div class="empty card"><h2>Aún no hay cursos</h2></div>{% endfor %}
+</div>
+{% endblock %}

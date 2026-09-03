@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Editar alumno{% endblock %}
+{% block content %}
+<div class="section-title"><div><h1>Editar alumno</h1><p class="muted">{{ student.name }}</p></div><a class="btn btn-secondary" href="{{ url_for('admin_students') }}">Volver</a></div>
+<div class="two-col">
+  <div class="card">
+    <h2>Datos</h2>
+    <form method="post">
+      <div class="field"><label>Nombre y apellidos</label><input name="name" value="{{ student.name }}" required></div>
+      <div class="field"><label>Grupo</label><input name="group_name" value="{{ student.group_name or '' }}"></div>
+      <div class="field"><label>Código</label><input name="student_code" value="{{ student.student_code or '' }}"></div>
+      <div class="field"><label>Correo</label><input type="email" name="email" value="{{ '' if student.email.endswith('@local.invalid') else student.email }}" placeholder="Opcional"></div>
+      <div class="field"><label>Nuevo PIN</label><input name="pin" inputmode="numeric" placeholder="Déjalo vacío para mantenerlo"></div>
+      <label><input type="checkbox" name="remove_pin" value="1"> Eliminar PIN actual</label>
+      <div style="margin-top:1rem"><button class="btn btn-primary">Guardar cambios</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Zona de eliminación</h2>
+    <p><strong>Archivar</strong> conserva resultados, intentos y matrículas. La eliminación definitiva borra el alumno y su historial.</p>
+    {% if not student.archived %}<form method="post" action="{{ url_for('admin_student_archive',student_id=student.id) }}"><button class="btn btn-secondary">Archivar alumno</button></form>{% endif %}
+    <hr>
+    <form method="post" action="{{ url_for('admin_student_delete',student_id=student.id) }}" onsubmit="return confirm('Esta acción borrará definitivamente al alumno y todo su historial. ¿Continuar?')">
+      <div class="field"><label>Para eliminar definitivamente escribe ELIMINAR</label><input name="confirmation" autocomplete="off"></div>
+      <button class="btn btn-danger">Eliminar definitivamente</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

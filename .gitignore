@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+*.bak
+backups/
+instance/*.db
+instance/*.db-*
+uploads/scorm/*
+!uploads/.gitkeep
+!instance/.gitkeep

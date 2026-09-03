@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}Error {{ code }}{% endblock %}{% block content %}<div class="errorbox"><span class="badge warn">Error {{ code }}</span><h1>No se pudo completar la operación</h1><p>{{ message }}</p><a class="btn btn-primary" href="{{ url_for('index') }}">Volver al inicio</a></div>{% endblock %}

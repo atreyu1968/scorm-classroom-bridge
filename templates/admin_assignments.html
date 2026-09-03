@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Asignaciones{% endblock %}
+{% block content %}
+<div class="section-title"><div><h1>Asignaciones</h1><p class="muted">Genera un enlace individual por alumno. También puedes asignar a un grupo completo.</p></div></div>
+<div class="card form-card wide">
+  <h2>Nueva asignación</h2>
+  {% if not packages %}<div class="notice warn">Primero debes <a href="{{ url_for('upload_package') }}">subir un SCORM</a>.</div>{% else %}
+  <form method="post">
+    <div class="form-row"><div class="field"><label>Paquete SCORM</label><select name="package_id" required><option value="">Selecciona…</option>{% for p in packages %}<option value="{{ p.id }}">{{ p.title }}</option>{% endfor %}</select></div><div class="field"><label>Tipo</label><select name="mode"><option value="activity">Actividad</option><option value="exam">Examen</option></select></div></div>
+    <div class="form-row"><div class="field"><label>Asignar grupo completo</label><select name="group_name"><option value="">—</option>{% for g in groups %}<option>{{ g }}</option>{% endfor %}</select></div><div class="field"><label>Intentos máximos</label><input type="number" min="0" name="max_attempts" placeholder="Actividad: hereda · Examen: 1"></div></div>
+    <div class="form-row"><div class="field"><label>Disponible desde</label><input type="datetime-local" name="available_from"></div><div class="field"><label>Fecha límite</label><input type="datetime-local" name="deadline"></div></div>
+    <div class="form-row"><div class="field"><label>Límite de pérdidas de foco</label><input type="number" min="0" name="focus_limit" placeholder="Vacío = hereda del SCORM"></div><div class="field checkbox-stack"><label class="check"><input type="checkbox" name="require_pin"> Exigir PIN del alumno</label><label class="check"><input type="checkbox" name="device_lock"> Vincular al primer dispositivo</label><span class="meta">En modo examen la vinculación de dispositivo se activa siempre.</span></div></div>
+    <div class="field"><label>Alumnos concretos <span class="meta">(se suman al grupo seleccionado)</span></label><div class="student-pick">{% for s in students %}<label class="student-check"><input type="checkbox" name="student_ids" value="{{ s.id }}"><span>{{ s.name }}</span><small>{{ s.group_name or 'Sin grupo' }}{% if s.pin_hash %} · PIN{% endif %}</small></label>{% endfor %}</div></div>
+    <button class="btn btn-primary" type="submit">Crear asignaciones y enlaces</button>
+  </form>
+  {% endif %}
+</div>
+<div class="section-title"><h2>Enlaces generados</h2><span class="badge">{{ assignments|length }} recientes</span></div>
+<div class="table-wrap"><table class="table"><thead><tr><th>Alumno</th><th>SCORM</th><th>Tipo</th><th>Ventana</th><th>Enlace</th><th>Protección</th><th>Acciones</th></tr></thead><tbody>
+{% for a in assignments %}<tr>
+<td><strong>{{ a.student.name }}</strong><div class="meta">{{ a.student.group_name or '—' }}</div></td><td>{{ a.package.title }}</td><td><span class="badge {{ 'danger' if a.mode=='exam' else 'info' }}">{{ 'EXAMEN' if a.mode=='exam' else 'ACTIVIDAD' }}</span></td><td><div class="meta">{{ a.available_from|localdt if a.available_from else 'Ahora' }}<br>→ {{ a.deadline|localdt if a.deadline else 'Sin límite' }}</div></td>
+<td><div class="copy-row"><input class="link-input" readonly value="{{ assignment_link(a) }}"><button type="button" class="btn btn-mini btn-secondary" onclick="navigator.clipboard.writeText(this.previousElementSibling.value)">Copiar</button></div></td>
+<td><div class="meta">{{ 'PIN' if a.require_pin else 'Token' }}{% if a.device_lock %} · dispositivo{% endif %}<br>{{ 'Vinculado' if a.device_hash else 'Sin vincular' }}</div></td>
+<td><div class="action-row">{% if a.device_lock %}<form method="post" action="{{ url_for('admin_assignment_reset_device',assignment_id=a.id) }}"><button class="btn btn-mini btn-secondary">Reset dispositivo</button></form>{% endif %}<form method="post" action="{{ url_for('admin_assignment_toggle',assignment_id=a.id) }}"><button class="btn btn-mini {{ 'btn-danger' if a.active else 'btn-secondary' }}">{{ 'Desactivar' if a.active else 'Activar' }}</button></form></div></td>
+</tr>{% else %}<tr><td colspan="7">Aún no hay asignaciones por enlace.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

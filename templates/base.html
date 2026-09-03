@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}SCORM Classroom Bridge{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/app.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('index') }}">SCORM <span>Bridge</span></a>
+  <nav class="nav">
+    {% if current_user and current_user.role == 'teacher' %}
+      <a href="{{ url_for('admin_dashboard') }}">Panel</a>
+      <a href="{{ url_for('admin_students') }}">Alumnado</a>
+      <a href="{{ url_for('admin_courses') }}">Cursos</a>
+      <a href="{{ url_for('admin_assignments') }}">Asignaciones</a>
+      <a href="{{ url_for('library') }}">Biblioteca</a>
+      <a class="btn btn-primary" href="{{ url_for('upload_package') }}">Subir SCORM</a>
+      <form method="post" action="{{ url_for('logout') }}"><button class="btn btn-secondary" type="submit">Salir</button></form>
+    {% elif current_user and current_user.role == 'student' %}
+      <a href="{{ url_for('student_dashboard') }}">Mi aula</a>
+      <form method="post" action="{{ url_for('logout') }}"><button class="btn btn-secondary" type="submit">Salir</button></form>
+    {% else %}
+      <a href="{{ url_for('student_access') }}">Acceso alumnado</a>
+      <a class="btn btn-primary" href="{{ url_for('admin_login') }}">Profesorado</a>
+    {% endif %}
+  </nav>
+</header>
+<main class="container">
+  {% with messages=get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

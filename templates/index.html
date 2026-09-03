@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}SCORM Bridge{% endblock %}
+{% block content %}
+<section class="hero">
+  <span class="eyebrow">SCORM 1.2 · SCORM 2004</span>
+  <h1>Actividades SCORM por enlace, sin obligar al alumnado a iniciar sesión con Google.</h1>
+  <p>El profesorado administra alumnos, grupos, enlaces personales, actividades y exámenes. Classroom puede seguir utilizándose como puerta de entrada, pero el modo por enlace funciona de forma completamente autónoma.</p>
+  <div class="hero-actions">
+    <a class="btn btn-light" href="{{ url_for('student_access') }}">Entrar con código de alumno</a>
+    <a class="btn btn-outline-light" href="{{ url_for('admin_login') }}">Panel del profesorado</a>
+  </div>
+</section>
+
+<div class="grid feature-grid">
+  <div class="card"><h3>Enlace personal</h3><p>Un enlace permanente por alumno muestra únicamente sus actividades asignadas.</p></div>
+  <div class="card"><h3>Enlace de actividad o examen</h3><p>Cada asignación puede disponer de enlace directo, PIN, fechas, intentos y vinculación de dispositivo.</p></div>
+  <div class="card"><h3>Classroom opcional</h3><p>La integración OAuth/Add-on permanece separada. El modo por enlace no depende de la cuenta educativa.</p></div>
+</div>
+
+{% if packages %}
+<div class="section-title"><h2>SCORM disponibles</h2></div>
+<div class="grid">
+  {% for p in packages %}
+  <div class="card"><span class="badge">SCORM {{ p.scorm_version }}</span><h3>{{ p.title }}</h3><p class="meta">Aprobado desde {{ p.pass_score|int }}% · {{ 'intentos ilimitados' if not p.max_attempts else p.max_attempts|string+' intentos' }}</p></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

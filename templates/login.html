@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Acceso{% endblock %}
+{% block content %}
+<div class="grid login-grid">
+  <div class="card"><h2>Alumnado</h2><p>No necesitas una cuenta Google. Entra con tu código y, si el profesor lo ha configurado, tu PIN.</p><a class="btn btn-primary" href="{{ url_for('student_access') }}">Acceso alumnado</a></div>
+  <div class="card"><h2>Profesorado</h2><p>Acceso local al panel de gestión.</p><a class="btn btn-primary" href="{{ url_for('admin_login') }}">Entrar al panel</a></div>
+  {% if config.GOOGLE_CLIENT_ID %}<div class="card"><h2>Google Classroom</h2><p>Solo para la modalidad Add-on/OAuth cuando el dominio lo permita.</p><a class="btn btn-secondary" href="{{ url_for('google_login') }}">Continuar con Google</a></div>{% endif %}
+</div>
+{% if config.DEV_AUTH %}<div class="card dev-card"><strong>Modo desarrollo:</strong> <a href="{{ url_for('dev_login',role='teacher') }}">docente de prueba</a> · <a href="{{ url_for('dev_login',role='student') }}">alumno de prueba</a></div>{% endif %}
+{% endblock %}

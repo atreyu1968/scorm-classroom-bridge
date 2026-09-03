@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.title }}{% endblock %}
+{% block content %}
+<div class="section-title"><div><h1>{{ course.title }}</h1><p class="muted">Configura lecciones y matrícula.</p></div><a class="btn btn-secondary" href="{{ url_for('admin_courses') }}">Volver a cursos</a></div>
+<div class="two-col">
+  <div class="card"><h2>Configuración</h2><form method="post" action="{{ url_for('admin_course_settings',course_id=course.id) }}">
+    <div class="field"><label>Título</label><input name="title" value="{{ course.title }}" required></div><div class="field"><label>Descripción</label><textarea name="description" rows="3">{{ course.description or '' }}</textarea></div>
+    <label><input type="checkbox" name="sequential" value="1" {% if course.sequential %}checked{% endif %}> Secuencial</label><br><label><input type="checkbox" name="active" value="1" {% if course.active %}checked{% endif %}> Curso activo</label>
+    <div style="margin-top:1rem"><button class="btn btn-secondary">Guardar</button></div></form></div>
+  <div class="card"><h2>Añadir lección SCORM</h2><form method="post" action="{{ url_for('admin_course_add_item',course_id=course.id) }}">
+    <div class="field"><label>Paquete</label><select name="package_id" required><option value="">Selecciona…</option>{% for p in packages %}<option value="{{ p.id }}">{{ p.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Título de lección (opcional)</label><input name="title"></div><div class="field"><label>Nota mínima (opcional)</label><input name="min_score" type="number" min="0" max="100" step="0.1" placeholder="Hereda del SCORM"></div>
+    <label><input type="checkbox" name="required" value="1" checked> Obligatoria</label><br><label><input type="checkbox" name="require_pass" value="1" checked> Exigir superación para desbloquear la siguiente</label>
+    <div style="margin-top:1rem"><button class="btn btn-primary">Añadir lección</button></div></form></div>
+</div>
+
+<div class="section-title"><h2>Lecciones</h2><span class="badge">{{ course.items|length }}</span></div>
+<div class="table-wrap"><table class="table"><thead><tr><th>#</th><th>SCORM</th><th>Configuración</th><th>Acciones</th></tr></thead><tbody>
+{% for item in course.items %}<tr><td>{{ item.position }}</td><td><strong>{{ item.title or item.package.title }}</strong><br><span class="muted">{{ item.package.title }}</span></td><td>
+<form method="post" action="{{ url_for('admin_course_update_item',course_id=course.id,item_id=item.id) }}"><div class="form-row"><input name="position" type="number" min="1" value="{{ item.position }}" style="max-width:80px"><input name="title" value="{{ item.title or '' }}" placeholder="Título"><input name="min_score" type="number" min="0" max="100" step="0.1" value="{{ item.min_score if item.min_score is not none else '' }}" placeholder="Nota mínima"></div><label><input type="checkbox" name="required" value="1" {% if item.required %}checked{% endif %}> Obligatoria</label> <label><input type="checkbox" name="require_pass" value="1" {% if item.require_pass %}checked{% endif %}> Exigir aprobado</label><button class="btn btn-mini btn-secondary">Guardar</button></form>
+</td><td><form method="post" action="{{ url_for('admin_course_delete_item',course_id=course.id,item_id=item.id) }}" onsubmit="return confirm('¿Retirar esta lección del curso?')"><button class="btn btn-mini btn-danger">Retirar</button></form></td></tr>{% else %}<tr><td colspan="4">Añade el primer SCORM al curso.</td></tr>{% endfor %}</tbody></table></div>
+
+<div class="section-title"><h2>Matrícula</h2><span class="badge">{{ enrollments|length }} alumnos</span></div>
+<div class="two-col"><div class="card"><h3>Añadir alumnado</h3><form method="post" action="{{ url_for('admin_course_enroll',course_id=course.id) }}">
+<div class="field"><label>Grupo completo</label><select name="group_name"><option value="">—</option>{% for g in groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}</select></div><p class="muted">También puedes seleccionar alumnos concretos:</p><div style="max-height:280px;overflow:auto">{% for s in students %}<label style="display:block"><input type="checkbox" name="student_ids" value="{{ s.id }}"> {{ s.name }} · {{ s.group_name or 'sin grupo' }}{% if s.id in enrolled_ids %} ✓{% endif %}</label>{% endfor %}</div><div style="margin-top:1rem"><button class="btn btn-primary">Matricular</button></div></form></div>
+<div class="card"><h3>Alumnado matriculado</h3>{% for e in enrollments %}<div class="action-row" style="justify-content:space-between;margin-bottom:.5rem"><span>{{ e.student.name }} · {{ e.student.group_name or '—' }}</span><form method="post" action="{{ url_for('admin_course_unenroll',course_id=course.id,student_id=e.student_id) }}"><button class="btn btn-mini btn-secondary">Retirar</button></form></div>{% else %}<p>No hay alumnado matriculado.</p>{% endfor %}</div></div>
+{% endblock %}

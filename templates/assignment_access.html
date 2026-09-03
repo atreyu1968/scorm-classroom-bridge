@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ assignment.package.title }}{% endblock %}
+{% block content %}
+<div class="card access-card">
+  <div class="card-top"><span class="badge">SCORM {{ assignment.package.scorm_version }}</span><span class="badge {{ 'danger' if assignment.mode=='exam' else 'info' }}">{{ 'EXAMEN' if assignment.mode=='exam' else 'ACTIVIDAD' }}</span></div>
+  <h1>{{ assignment.package.title }}</h1>
+  <p><strong>Alumno/a:</strong> {{ student.name }}{% if student.group_name %} · {{ student.group_name }}{% endif %}</p>
+  <div class="access-summary">
+    <div><span>Inicio</span><strong>{{ assignment.available_from|localdt if assignment.available_from else 'Disponible' }}</strong></div>
+    <div><span>Límite</span><strong>{{ assignment.deadline|localdt if assignment.deadline else 'Sin límite' }}</strong></div>
+    <div><span>Intentos</span><strong>{{ 'Ilimitados' if not max_attempts else max_attempts }}</strong></div>
+    <div><span>Protección</span><strong>{{ 'PIN' if assignment.require_pin else 'Enlace' }}{% if assignment.device_lock %} + dispositivo{% endif %}</strong></div>
+  </div>
+  {% if assignment.mode=='exam' %}<div class="notice warn"><strong>Modo examen.</strong> La actividad solicita pantalla completa y registra las incidencias de foco configuradas. Un navegador web no puede impedir físicamente cerrar la aplicación o cambiar de dispositivo.</div>{% endif %}
+  {% if not available %}
+    <div class="notice danger">{{ reason }}</div>
+  {% else %}
+  <form method="post" class="launch-form">
+    {% if assignment.require_pin and not pin_verified %}<div class="field"><label>PIN</label><input type="password" inputmode="numeric" name="pin" required autocomplete="off"></div>{% endif %}
+    <button class="btn btn-primary btn-large" type="submit">{{ 'Comenzar examen' if assignment.mode=='exam' else 'Comenzar / continuar' }}</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

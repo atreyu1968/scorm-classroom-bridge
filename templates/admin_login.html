@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Acceso profesorado{% endblock %}
+{% block content %}
+<div class="card form-card narrow">
+  <span class="badge">Administración local</span>
+  <h1>Acceso del profesorado</h1>
+  <p class="muted">Estas credenciales son independientes de Google Workspace.</p>
+  <form method="post">
+    <div class="field"><label>Usuario</label><input name="username" autocomplete="username" required></div>
+    <div class="field"><label>Contraseña</label><input type="password" name="password" autocomplete="current-password" required></div>
+    <button class="btn btn-primary" type="submit">Entrar</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+Flask>=3.1,<4
+Flask-SQLAlchemy>=3.1,<4
+SQLAlchemy>=2.0,<3
+google-auth>=2.35,<3
+google-auth-oauthlib>=1.2,<2
+google-api-python-client>=2.150,<3
+cryptography>=43,<47
+python-dotenv>=1.0,<2
+gunicorn>=23,<24
+pytest>=8,<9

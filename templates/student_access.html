@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Acceso alumnado{% endblock %}
+{% block content %}
+<div class="card form-card narrow">
+  <span class="badge">Sin Google</span>
+  <h1>Acceso alumnado</h1>
+  <p>Introduce el código que te ha facilitado tu profesor. El PIN solo es necesario si tu acceso está protegido.</p>
+  <form method="post">
+    <div class="field"><label>Código de alumno</label><input name="code" placeholder="1AF-8K4M2P" autocomplete="off" required></div>
+    <div class="field"><label>PIN <span class="meta">(si procede)</span></label><input type="password" inputmode="numeric" name="pin" autocomplete="off"></div>
+    <button class="btn btn-primary" type="submit">Entrar</button>
+  </form>
+</div>
+{% endblock %}

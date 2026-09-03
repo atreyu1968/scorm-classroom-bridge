@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Alumnado{% endblock %}
+{% block content %}
+<div class="section-title"><div><h1>Alumnado</h1><p class="muted">Gestión completa: alta, edición, grupos, enlaces, PIN, archivo y eliminación.</p></div></div>
+<div class="two-col">
+  <div class="card">
+    <h2>Nuevo alumno</h2>
+    <form method="post">
+      <div class="field"><label>Nombre</label><input name="name" required></div>
+      <div class="form-row"><div class="field"><label>Grupo</label><input name="group_name" placeholder="1º AF"></div><div class="field"><label>Código opcional</label><input name="student_code" placeholder="Se genera automáticamente"></div></div>
+      <div class="field"><label>Correo opcional</label><input type="email" name="email" placeholder="No es necesario"></div>
+      <div class="field"><label>PIN opcional</label><input name="pin" inputmode="numeric" placeholder="4-12 cifras"></div>
+      <button class="btn btn-primary" type="submit">Crear alumno</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Importar CSV</h2>
+    <p>Acepta columnas <span class="code">nombre,grupo,email,pin,identificador</span>. Solo <strong>nombre</strong> es imprescindible.</p>
+    <form method="post" action="{{ url_for('admin_students_import') }}" enctype="multipart/form-data">
+      <div class="field"><input type="file" name="csv_file" accept=".csv,text/csv" required></div>
+      <button class="btn btn-secondary" type="submit">Importar alumnos</button>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-top:1rem">
+  <h2>Acciones masivas</h2>
+  <form id="bulk-form" method="post" action="{{ url_for('admin_students_bulk') }}">
+    <div class="form-row">
+      <div class="field"><label>Acción</label><select name="bulk_action" required><option value="">Selecciona…</option><option value="activate">Activar/restaurar</option><option value="deactivate">Desactivar</option><option value="archive">Archivar (conservar historial)</option><option value="change_group">Cambiar de grupo</option><option value="delete">Eliminar definitivamente</option></select></div>
+      <div class="field"><label>Nuevo grupo</label><input name="bulk_group" placeholder="Solo para cambiar de grupo"></div>
+      <div class="field"><label>Confirmación borrado</label><input name="bulk_confirmation" placeholder="Escribe ELIMINAR solo para borrado"></div>
+    </div>
+    <button class="btn btn-secondary" type="submit">Aplicar a seleccionados</button>
+  </form>
+</div>
+
+<div class="section-title"><h2>Listado</h2><span class="badge">{{ students|length }} alumnos</span></div>
+<div class="table-wrap"><table class="table table-compact"><thead><tr><th><input type="checkbox" onclick="document.querySelectorAll('.student-check').forEach(x=>x.checked=this.checked)"></th><th>Alumno</th><th>Grupo</th><th>Código</th><th>Enlace personal</th><th>PIN</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+{% for s in students %}<tr>
+<td><input class="student-check" type="checkbox" name="student_ids" value="{{ s.id }}" form="bulk-form"></td>
+<td><strong>{{ s.name }}</strong><br><span class="muted">{{ s.email if not s.email.endswith('@local.invalid') else '' }}</span></td><td>{{ s.group_name or '—' }}</td><td><span class="code">{{ s.student_code }}</span></td>
+<td><div class="copy-row"><input class="link-input" readonly value="{{ public_link('student_personal', token=s.access_token) }}"><button type="button" class="btn btn-mini btn-secondary" onclick="navigator.clipboard.writeText(this.previousElementSibling.value)">Copiar</button></div></td>
+<td><form class="inline-form" method="post" action="{{ url_for('admin_student_pin',student_id=s.id) }}"><input name="pin" inputmode="numeric" placeholder="{{ 'Cambiar' if s.pin_hash else 'Sin PIN' }}"><button class="btn btn-mini btn-secondary">Guardar</button></form></td>
+<td>{% if s.archived %}<span class="badge muted">Archivado</span>{% elif s.active %}<span class="badge ok">Activo</span>{% else %}<span class="badge danger">Desactivado</span>{% endif %}</td>
+<td><div class="action-row">
+<a class="btn btn-mini btn-secondary" href="{{ url_for('admin_student_edit',student_id=s.id) }}">Editar</a>
+{% if s.archived %}<form method="post" action="{{ url_for('admin_student_restore',student_id=s.id) }}"><button class="btn btn-mini btn-secondary">Restaurar</button></form>{% else %}
+<form method="post" action="{{ url_for('admin_student_reset_link',student_id=s.id) }}"><button class="btn btn-mini btn-secondary">Regenerar enlace</button></form>
+<form method="post" action="{{ url_for('admin_student_toggle',student_id=s.id) }}"><button class="btn btn-mini {{ 'btn-danger' if s.active else 'btn-secondary' }}">{{ 'Desactivar' if s.active else 'Activar' }}</button></form>
+<form method="post" action="{{ url_for('admin_student_archive',student_id=s.id) }}"><button class="btn btn-mini btn-secondary">Archivar</button></form>{% endif %}
+</div></td>
+</tr>{% else %}<tr><td colspan="8">Aún no hay alumnos.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}
