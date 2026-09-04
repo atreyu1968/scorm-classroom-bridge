@@ -2,30 +2,166 @@
 
 Plataforma ligera para publicar, asignar y secuenciar paquetes **SCORM 1.2 / SCORM 2004** sin obligar al alumnado a iniciar sesión con Google. Está pensada para centros educativos en los que las cuentas institucionales bloquean aplicaciones externas, manteniendo Google Classroom como integración opcional.
 
-## Instalación en un comando
+## Instalación recomendada en Ubuntu desde cero
 
-Con dominio y HTTPS automático:
+Estas instrucciones están pensadas también para un servidor Ubuntu que **no esté actualizado y no tenga instalados Git, curl ni Docker**.
+
+### 1. Acceder al servidor
+
+Conéctate por SSH con un usuario que tenga permisos `sudo`:
+
+```bash
+ssh usuario@IP_DEL_SERVIDOR
+```
+
+Comprueba la versión de Ubuntu:
+
+```bash
+cat /etc/os-release
+```
+
+Se recomienda utilizar una versión LTS de Ubuntu actualmente soportada.
+
+### 2. Actualizar completamente Ubuntu
+
+Primero actualiza el índice de paquetes y el sistema:
+
+```bash
+sudo apt update
+sudo DEBIAN_FRONTEND=noninteractive apt full-upgrade -y
+sudo apt autoremove -y
+sudo apt autoclean
+```
+
+Si Ubuntu indica que es necesario reiniciar, o existe el archivo `/var/run/reboot-required`, reinicia antes de continuar:
+
+```bash
+if [ -f /var/run/reboot-required ]; then sudo reboot; fi
+```
+
+Tras el reinicio, vuelve a conectarte por SSH.
+
+### 3. Instalar las utilidades mínimas necesarias
+
+El comando de autoinstalación se descarga con `curl`, por lo que en un servidor completamente limpio hay que instalar primero las herramientas básicas:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  ca-certificates \
+  curl \
+  git \
+  openssl \
+  unzip
+```
+
+Comprueba que están disponibles:
+
+```bash
+curl --version
+git --version
+openssl version
+```
+
+> **No es necesario instalar Docker manualmente.** `install.sh` comprueba si Docker Engine y Docker Compose están disponibles y, si faltan, los instala automáticamente.
+
+### 4. Preparar red, dominio y cortafuegos
+
+Para utilizar HTTPS automático con Caddy, el dominio debe apuntar mediante DNS a la IP pública del servidor y los puertos **80/TCP y 443/TCP** deben ser accesibles desde Internet.
+
+Si utilizas UFW, conserva primero el acceso SSH y abre HTTP/HTTPS:
+
+```bash
+sudo apt install -y ufw
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status
+```
+
+Si UFW ya estaba configurado, revisa sus reglas antes de modificarlo. Si el servidor está detrás de un router, NAT, firewall externo o proveedor cloud, abre/redirige también allí los puertos 80 y 443.
+
+Antes de instalar con dominio, comprueba que el DNS resuelve correctamente:
+
+```bash
+getent hosts scorm.ejemplo.es
+```
+
+Debe devolver la IP correspondiente al servidor.
+
+### 5. Ejecutar el autoinstalador
+
+#### Con dominio y HTTPS automático — recomendado
+
+Sustituye `scorm.ejemplo.es` por tu dominio real:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/atreyu1968/scorm-classroom-bridge/main/install.sh | sudo bash -s -- --domain scorm.ejemplo.es
 ```
 
-Sin dominio, para una prueba provisional por IP:
+El instalador:
+
+- instala las dependencias base que todavía falten;
+- instala Docker Engine y Docker Compose si no existen;
+- habilita e inicia Docker;
+- clona/actualiza este repositorio en `/opt/scorm-classroom-bridge`;
+- crea los directorios persistentes necesarios;
+- genera automáticamente `SECRET_KEY` y claves internas;
+- genera una contraseña de administración segura cuando no se proporciona una;
+- crea `.env` con permisos restringidos;
+- construye la imagen Docker de la aplicación;
+- inicia Flask/Gunicorn y Caddy mediante Docker Compose;
+- configura HTTPS automáticamente cuando se proporciona un dominio;
+- conserva base de datos y paquetes SCORM en almacenamiento persistente.
+
+#### Sin dominio — prueba provisional por IP
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/atreyu1968/scorm-classroom-bridge/main/install.sh | sudo bash
 ```
 
-El instalador:
+Este modo es apropiado para comprobar la instalación antes de configurar DNS/HTTPS.
 
-- instala Git, Docker Engine y Docker Compose si hacen falta;
-- clona/actualiza el repositorio en `/opt/scorm-classroom-bridge`;
-- genera secretos y contraseña de administración cuando no se proporcionan;
-- crea `.env` con permisos restringidos;
-- construye la aplicación;
-- inicia Flask/Gunicorn y Caddy;
-- configura HTTPS automáticamente cuando se proporciona un dominio;
-- conserva base de datos y SCORM en volúmenes/directorios persistentes.
+### 6. Verificar la instalación
+
+Comprueba Docker y los contenedores:
+
+```bash
+docker --version
+docker compose version
+cd /opt/scorm-classroom-bridge
+sudo docker compose ps
+```
+
+Comprueba los últimos registros si fuera necesario:
+
+```bash
+cd /opt/scorm-classroom-bridge
+sudo docker compose logs --tail=100
+```
+
+Con dominio, comprueba el endpoint de salud:
+
+```bash
+curl -fsS https://scorm.ejemplo.es/health
+```
+
+Después entra en:
+
+```text
+https://scorm.ejemplo.es/admin
+```
+
+Las credenciales iniciales se muestran al finalizar `install.sh`. Guárdalas en un lugar seguro.
+
+### Instalación resumida para un Ubuntu ya preparado
+
+Si Ubuntu ya está actualizado y dispone de `curl`, puedes ir directamente al instalador:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/atreyu1968/scorm-classroom-bridge/main/install.sh | sudo bash -s -- --domain scorm.ejemplo.es
+```
 
 Consulta [`docs/INSTALLATION.md`](docs/INSTALLATION.md) para instalación, actualización, copias y desinstalación.
 
@@ -136,7 +272,7 @@ El alumnado ve su progreso de curso desde su mismo enlace personal.
 
 Las actividades y cursos nuevos aparecerán automáticamente en su aula.
 
-## Actualización
+## Actualización de la aplicación
 
 ```bash
 cd /opt/scorm-classroom-bridge
@@ -144,6 +280,20 @@ sudo bash upgrade.sh
 ```
 
 El script crea una copia de seguridad antes de actualizar.
+
+Para mantener también Ubuntu actualizado periódicamente:
+
+```bash
+sudo apt update
+sudo apt full-upgrade -y
+sudo apt autoremove -y
+```
+
+Si una actualización del sistema requiere reinicio:
+
+```bash
+if [ -f /var/run/reboot-required ]; then sudo reboot; fi
+```
 
 ## Copias de seguridad
 
@@ -156,13 +306,27 @@ Se incluyen `instance`, `uploads` y `.env`.
 
 ## Configuración manual
 
-Si no utilizas el instalador:
+Si no utilizas el instalador, instala primero los requisitos:
+
+```bash
+sudo apt update
+sudo apt install -y ca-certificates curl git openssl unzip
+```
+
+Después:
 
 ```bash
 git clone https://github.com/atreyu1968/scorm-classroom-bridge.git
 cd scorm-classroom-bridge
 cp .env.example .env
 nano .env
+```
+
+Instala Docker Engine y Docker Compose antes de ejecutar manualmente el proyecto, o utiliza `install.sh` para que esa parte sea automática.
+
+Con Docker disponible:
+
+```bash
 docker compose up -d --build
 ```
 
@@ -216,6 +380,6 @@ GitHub Actions ejecuta estas comprobaciones automáticamente en cada `push` y `p
 
 Versión: **3.0.0-lms**.
 
-Repositorio público previsto: `atreyu1968/scorm-classroom-bridge`.
+Repositorio público: `atreyu1968/scorm-classroom-bridge`.
 
 No se incluye una licencia de software abierta por defecto; la publicación pública del repositorio no implica por sí sola cesión de derechos de reutilización.
